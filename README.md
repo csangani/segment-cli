@@ -1,6 +1,7 @@
 # segment-cli
 
 [![CI](https://github.com/csangani/segment-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/csangani/segment-cli/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/csangani/segment-cli)](https://github.com/csangani/segment-cli/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Node.js 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)
 ![Windows | macOS | Linux](https://img.shields.io/badge/platform-windows%20%7C%20macos%20%7C%20linux-lightgrey.svg)
@@ -58,21 +59,57 @@ Don't have a token? In the Segment app, go to **Settings > Access Management > T
 
 ## Installation
 
-Requires [Node.js](https://nodejs.org) 20 or later, plus [git](https://git-scm.com), which npm uses to fetch the package from GitHub.
+Requires [Node.js](https://nodejs.org) 20 or later. Every release is published in three places, and each is install-tested on Linux, macOS, and Windows:
 
-| | Command |
-| --- | --- |
-| Install the latest | `npm install -g github:csangani/segment-cli` |
-| Install a specific release | `npm install -g github:csangani/segment-cli#v0.3.0` |
-| Install without git | `npm install -g https://github.com/csangani/segment-cli/releases/download/v0.3.0/segment-cli-0.3.0.tgz` |
-| Update | Run the install command again |
-| Run once without installing | `npx github:csangani/segment-cli --help` |
-| Check the version | `segment --version` |
-| Uninstall | `npm uninstall -g segment-cli` |
+| Source | Needs | Best for |
+| --- | --- | --- |
+| [From GitHub](#from-github-recommended) | git | Most people: no account or token needed |
+| [Release tarball](#from-a-release-tarball) | nothing extra | Machines without git |
+| [GitHub Packages](#from-github-packages) | a GitHub token | Teams that already use GitHub's npm registry |
 
-Releases are listed on the [Releases page](https://github.com/csangani/segment-cli/releases).
+### From GitHub (recommended)
 
-If your shell can't find `segment` after installing, npm's global folder isn't on your `PATH`. Run `npm prefix -g`: on Windows, add that folder to `PATH`; on macOS and Linux, add its `bin` subfolder.
+```bash
+npm install -g github:csangani/segment-cli          # latest
+npm install -g github:csangani/segment-cli#v0.4.0   # a specific release
+npx github:csangani/segment-cli --help              # run once without installing
+```
+
+To update, run the install command again.
+
+### From a release tarball
+
+Each [release](https://github.com/csangani/segment-cli/releases) includes the npm package as a file, which npm can install directly:
+
+```bash
+npm install -g https://github.com/csangani/segment-cli/releases/download/v0.4.0/csangani-segment-cli-0.4.0.tgz
+```
+
+### From GitHub Packages
+
+Releases are also published to GitHub's npm registry as [`@csangani/segment-cli`](https://github.com/csangani/segment-cli/pkgs/npm/segment-cli). **GitHub Packages requires authentication even for public packages**, so you need a GitHub personal access token (classic) with the `read:packages` scope. Do this once:
+
+```bash
+npm config set @csangani:registry https://npm.pkg.github.com
+npm login --scope=@csangani --auth-type=legacy --registry=https://npm.pkg.github.com
+```
+
+At the prompts, enter your GitHub username, and the token as the password. Then install, and update later, with:
+
+```bash
+npm install -g @csangani/segment-cli
+npm update -g @csangani/segment-cli
+```
+
+### Check, uninstall, and PATH
+
+```bash
+segment --version
+npm uninstall -g @csangani/segment-cli
+```
+
+- **Upgrading from 0.3.0?** That release was named `segment-cli`. Run `npm uninstall -g segment-cli` first.
+- **Shell can't find `segment`?** npm's global folder isn't on your `PATH`. Run `npm prefix -g`: on Windows, add that folder to `PATH`; on macOS and Linux, add its `bin` subfolder.
 
 ## Authentication
 
@@ -302,11 +339,24 @@ See **[skills/README.md](skills/README.md)** for per-skill details, manual insta
 git clone https://github.com/csangani/segment-cli && cd segment-cli
 npm link                 # put your working copy on PATH as `segment`
 npm test                 # end-to-end tests against a mock Segment API
+npm run lint             # syntax, skills spec, manifests, versions, Markdown links
 npm run update-spec      # refresh spec.json from docs.segmentapis.com
 ```
 
 - **`npm test`** starts a mock Segment API with US and EU regions and drives the real CLI through about 40 checks. They cover login and region detection, credential storage, profiles, read-only mode, parameter routing, versions, pagination, 429 retries, field projection, large output, dry runs, and logout. They also check that no token ever appears in output.
-- **CI** runs the tests on Linux, macOS, and Windows with Node 22 and 24, including a Linux job against a real GNOME Keyring.
+- **`npm run lint`** checks, offline:
+  - that every script parses,
+  - that skills meet the [Agent Skills spec](https://agentskills.io) and pre-approve only read-only commands,
+  - that the package, plugin, and changelog versions agree,
+  - that the generated files are in sync,
+  - that every relative Markdown link and anchor resolves.
+- **[CI](.github/workflows/ci.yml)** runs on every push and pull request:
+  - the lint job,
+  - the tests on Linux, macOS, and Windows with Node 22 and 24,
+  - a Linux job against a real GNOME Keyring.
+
+  The single **CI passed** check gates merges.
+- **[Spec check](.github/workflows/spec-check.yml)** runs weekly and opens an issue when Segment publishes a new Public API spec.
 - **Plugin checks:** `claude plugin validate .` checks the Claude Code plugin manifests.
 
 ```
@@ -316,22 +366,29 @@ src/auth.mjs       profiles, credential stores, hidden prompt
 spec.json          trimmed Segment OpenAPI spec (generated)
 skills/            agent skills
 .claude-plugin/    Claude Code plugin and marketplace manifests
-tools/             spec generator and end-to-end tests
+tools/             spec generator, lint, and end-to-end tests
 ```
 
 ### Releasing
 
-1. Bump `version` in `package.json`, and in `.claude-plugin/plugin.json` if the skills changed. Commit and push.
-2. Tag the release and push the tag:
+`main` is protected: changes land through pull requests, which need the **CI passed** check and resolved review threads, and are squash-merged. Release tags (`v*`) can't be moved or deleted once pushed.
+
+1. In a pull request, bump `version` in `package.json` and `.claude-plugin/plugin.json`, and move the **Unreleased** changelog entries under the new version. Merge it.
+2. Tag the merged commit on `main` and push the tag:
 
    ```bash
-   git tag v0.3.1
-   git push origin v0.3.1
+   git tag v0.4.1
+   git push origin v0.4.1
    ```
 
-   The [release workflow](.github/workflows/release.yml) runs the full test matrix, checks that the tag matches `package.json`, and publishes a GitHub Release with the installable tarball.
+   The [release workflow](.github/workflows/release.yml) then:
+   - reruns the full test matrix,
+   - checks the tag against `package.json` and the changelog,
+   - publishes `@csangani/segment-cli` to GitHub Packages,
+   - creates a GitHub Release with the tarball and the changelog notes,
+   - installs the result from all three sources on Linux, macOS, and Windows.
 
-The package is marked `private` so it can't be published to the npm registry by accident. Users install it from GitHub. Release history is in the [changelog](CHANGELOG.md).
+The package is published to GitHub Packages only, not to the public npm registry. Release history is in the [changelog](CHANGELOG.md).
 
 ## Contributing
 

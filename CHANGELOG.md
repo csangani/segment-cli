@@ -4,6 +4,26 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-06
+
+### Changed
+
+- **The package is now named `@csangani/segment-cli`.** If you installed 0.3.0, run `npm uninstall -g segment-cli` before installing 0.4.0, because both provide the `segment` command. The command and its behaviour are unchanged.
+- `spec.json` no longer contains a generation timestamp, so regenerating an unchanged spec produces an identical file.
+
+### Added
+
+- **GitHub Packages:** releases are published there as `@csangani/segment-cli`, alongside the GitHub Release tarball.
+- **Release checks:** each release is install-tested on Linux, macOS, and Windows from all three sources: GitHub Packages, the git tag, and the release tarball.
+- **`npm run lint`**, also run in CI, checks:
+  - script syntax,
+  - the Agent Skills spec,
+  - manifests and version consistency,
+  - generated files,
+  - Markdown links.
+- **Spec check:** a weekly workflow opens an issue when Segment publishes a new Public API spec.
+- **Branch protection:** `main` only changes through pull requests that pass CI, and release tags can't be moved or deleted.
+
 ## [0.3.0] - 2026-11-06
 
 First public release.
@@ -27,5 +47,6 @@ First public release.
 - **CI:** end-to-end tests on Linux, macOS, and Windows, including a real GNOME Keyring.
 - **Releases:** a GitHub Release with an installable tarball for each `v*` tag.
 
-[Unreleased]: https://github.com/csangani/segment-cli/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/csangani/segment-cli/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/csangani/segment-cli/releases/tag/v0.4.0
 [0.3.0]: https://github.com/csangani/segment-cli/releases/tag/v0.3.0

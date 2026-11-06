@@ -21,7 +21,7 @@ npm install -g github:csangani/segment-cli
 segment auth login
 ```
 
-Your agent can also do the install and walk you through login: install the skills, then ask it to "set up Segment".
+Other install options, including GitHub Packages and release tarballs, are in the [main README](../README.md#installation). Your agent can also do the install and walk you through login: install the skills, then ask it to "set up Segment".
 
 ### Any agent: the `skills` installer
 

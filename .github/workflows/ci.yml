@@ -9,7 +9,24 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Syntax, skills spec, manifests, links, versions
+        run: npm run lint
+      - name: Check npm package contents
+        run: npm pack --dry-run
+
   test:
     name: Test (${{ matrix.os }}, Node ${{ matrix.node }})
     strategy:
@@ -25,8 +42,6 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: End-to-end CLI tests (mock Segment API)
         run: node tools/smoke-test.mjs
-      - name: Check npm package contents
-        run: npm pack --dry-run
 
   linux-keyring:
     name: Test Linux Secret Service storage
@@ -41,3 +56,17 @@ jobs:
       - name: End-to-end tests with an unlocked keyring
         run: |
           dbus-run-session -- sh -c 'printf test | gnome-keyring-daemon --unlock --components=secrets >/dev/null 2>&1; SEGMENT_TEST_EXPECT_STORE=secret-service node tools/smoke-test.mjs'
+
+  # Single required status check for branch protection, so the test matrix can change freely.
+  ci-passed:
+    name: CI passed
+    if: always()
+    needs: [lint, test, linux-keyring]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All jobs succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for r in $RESULTS; do [ "$r" = "success" ] || exit 1; done

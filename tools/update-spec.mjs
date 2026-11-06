@@ -140,7 +140,6 @@ const ops = trimOps(spec);
 const out = {
   source: DOCS,
   version: spec.info.version,
-  generatedAt: new Date().toISOString(),
   servers: { us: "https://api.segmentapis.com", eu: "https://eu1.api.segmentapis.com" },
   tags: (spec.tags || []).filter((t) => ops.some((o) => o.tag === t.name)).map((t) => ({ name: t.name, description: (t.description || "").slice(0, 600) })),
   operations: ops,

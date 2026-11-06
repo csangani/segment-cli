@@ -1,10 +1,9 @@
-# Publishes a GitHub Release when a tag like v0.3.1 is pushed: runs the full test matrix,
-# checks the tag matches package.json, builds the npm tarball, and attaches it to the release
-# with notes taken from CHANGELOG.md.
-#
-# Users install a release with either:
-#   npm install -g github:csangani/segment-cli#v0.3.1
-#   npm install -g https://github.com/csangani/segment-cli/releases/download/v0.3.1/segment-cli-0.3.1.tgz
+# Releases a version when a tag like v0.4.1 is pushed:
+#   1. runs the full CI matrix,
+#   2. checks the tag matches package.json and CHANGELOG.md,
+#   3. publishes @csangani/segment-cli to GitHub Packages,
+#   4. creates a GitHub Release with the installable tarball and notes from CHANGELOG.md,
+#   5. installs the release on Linux, macOS and Windows from all three sources and runs it.
 
 name: Release
 
@@ -20,43 +19,100 @@ jobs:
     uses: ./.github/workflows/ci.yml
 
   release:
+    name: Publish
     needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tarball: ${{ steps.pack.outputs.tarball }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-      - name: Check the tag matches package.json
+          registry-url: https://npm.pkg.github.com
+          scope: "@csangani"
+      - name: Check the tag matches package.json and the changelog
         id: version
         run: |
           version="$(node -p "require('./package.json').version")"
           if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version"
-            exit 1
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version"; exit 1
           fi
+          grep -q "^## \[$version\]" CHANGELOG.md || { echo "::error::CHANGELOG.md has no section for $version"; exit 1; }
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Build the tarball
-        run: npm pack
-      - name: Extract release notes from CHANGELOG.md
+        id: pack
+        run: echo "tarball=$(npm pack --json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s)[0].filename))')" >> "$GITHUB_OUTPUT"
+      - name: Publish to GitHub Packages
+        run: npm publish "${{ steps.pack.outputs.tarball }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Write release notes from CHANGELOG.md
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          TARBALL: ${{ steps.pack.outputs.tarball }}
         run: |
           awk -v v="$VERSION" 'index($0, "## [" v "]") == 1 {found=1; next} /^## \[/ {found=0} /^\[[^]]+\]: / {found=0} found' CHANGELOG.md > notes.md
-          if [ ! -s notes.md ]; then echo "See CHANGELOG.md." > notes.md; fi
-          {
-            echo
-            echo "## Install"
-            echo
-            echo '```bash'
-            echo "npm install -g github:csangani/segment-cli#$GITHUB_REF_NAME"
-            echo '```'
-          } >> notes.md
+          cat >> notes.md <<EOF
+
+          ## Install
+
+          \`\`\`bash
+          npm install -g github:csangani/segment-cli#$GITHUB_REF_NAME
+          \`\`\`
+
+          Or from GitHub Packages (requires a token with \`read:packages\`; see the README): \`npm install -g @csangani/segment-cli@$VERSION\`
+
+          Or without git: \`npm install -g https://github.com/csangani/segment-cli/releases/download/$GITHUB_REF_NAME/$TARBALL\`
+          EOF
           cat notes.md
       - name: Create the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.version.outputs.version }}
-        run: gh release create "$GITHUB_REF_NAME" "segment-cli-$VERSION.tgz" --title "segment-cli $GITHUB_REF_NAME" --notes-file notes.md --verify-tag
+        run: gh release create "$GITHUB_REF_NAME" "${{ steps.pack.outputs.tarball }}" --title "segment-cli $GITHUB_REF_NAME" --notes-file notes.md --verify-tag
+
+  verify:
+    name: Verify install (${{ matrix.os }}, ${{ matrix.source }})
+    needs: release
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        source: [github-packages, git-tag, release-tarball]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://npm.pkg.github.com
+          scope: "@csangani"
+      - name: Install from ${{ matrix.source }}
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.release.outputs.version }}
+          TARBALL: ${{ needs.release.outputs.tarball }}
+        run: |
+          case "${{ matrix.source }}" in
+            github-packages) npm install -g "@csangani/segment-cli@$VERSION" ;;
+            git-tag)         npm install -g "github:csangani/segment-cli#$GITHUB_REF_NAME" ;;
+            release-tarball) npm install -g "https://github.com/csangani/segment-cli/releases/download/$GITHUB_REF_NAME/$TARBALL" ;;
+          esac
+      - name: Run the installed CLI
+        shell: bash
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          segment --version | tee version.txt
+          grep -q "segment $VERSION " version.txt
+          segment search list sources --limit 1
+          # With no profiles, auth status must exit 3 ("Not logged in").
+          set +e; segment auth status --config-dir "$RUNNER_TEMP/segment-cfg"; code=$?; set -e
+          [ "$code" -eq 3 ] || { echo "::error::expected exit 3 from auth status, got $code"; exit 1; }

@@ -1,0 +1,65 @@
+# Weekly check for changes to Segment's Public API spec. When the published spec differs from
+# spec.json, opens an issue (or comments on the open one) listing added and removed operations,
+# so a maintainer can run `npm run update-spec`, test, and release.
+
+name: Spec check
+
+on:
+  schedule:
+    - cron: "17 6 * * 1" # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    name: Compare with docs.segmentapis.com
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Regenerate from the live spec
+        run: |
+          cp spec.json "$RUNNER_TEMP/spec.old.json"
+          node tools/update-spec.mjs
+      - name: Open or update an issue if the spec changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- spec.json; then
+            echo "spec.json is up to date."
+            exit 0
+          fi
+          node -e '
+            const fs = require("fs");
+            const a = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+            const b = JSON.parse(fs.readFileSync("spec.json", "utf8"));
+            const ids = (s) => new Set(s.operations.map((o) => o.id));
+            const [ia, ib] = [ids(a), ids(b)];
+            const added = [...ib].filter((x) => !ia.has(x)).sort();
+            const removed = [...ia].filter((x) => !ib.has(x)).sort();
+            const lines = [
+              `Segment published Public API spec **v${b.version}**; this repository bundles **v${a.version}**.`,
+              "",
+              `- Operations: ${a.operations.length} → ${b.operations.length}`,
+              `- Added: ${added.length ? added.map((x) => "`" + x + "`").join(", ") : "none"}`,
+              `- Removed: ${removed.length ? removed.map((x) => "`" + x + "`").join(", ") : "none"}`,
+              "- Other changes (parameters, schemas, descriptions) may also be included.",
+              "",
+              "To update: run `npm run update-spec`, then `npm test` and `npm run lint`, add a CHANGELOG entry, and open a pull request.",
+            ];
+            fs.writeFileSync("issue.md", lines.join("\n") + "\n");
+            fs.writeFileSync("title.txt", `Segment API spec changed: v${a.version} → v${b.version}`);
+          ' "$RUNNER_TEMP/spec.old.json"
+          cat issue.md
+          gh label create spec-update --color 0e8a16 --description "Segment Public API spec changed" 2>/dev/null || true
+          existing="$(gh issue list --label spec-update --state open --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file issue.md
+          else
+            gh issue create --title "$(cat title.txt)" --label spec-update --body-file issue.md
+          fi

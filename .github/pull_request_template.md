@@ -8,7 +8,7 @@
 
 ## Checklist
 
-- [ ] `npm test` passes
+- [ ] `npm test` and `npm run lint` pass
 - [ ] Added or updated checks in `tools/smoke-test.mjs` for behaviour changes
 - [ ] Added a line under **Unreleased** in `CHANGELOG.md`
 - [ ] Updated the README or the skills if commands, flags, or behaviour changed

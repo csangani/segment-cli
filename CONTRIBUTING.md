@@ -17,6 +17,7 @@ You need Node.js 20+ and git.
 git clone https://github.com/csangani/segment-cli && cd segment-cli
 npm link        # `segment` on your PATH now runs your working copy
 npm test        # end-to-end tests against a mock Segment API
+npm run lint    # syntax, skills spec, manifests, versions, Markdown links
 ```
 
 `npm test` runs [`tools/smoke-test.mjs`](tools/smoke-test.mjs). It:
@@ -40,6 +41,8 @@ It needs no network access and no Segment account.
 | `.claude-plugin/` | Claude Code plugin and marketplace manifests |
 | `tools/update-spec.mjs` | Regenerates the two generated files |
 | `tools/smoke-test.mjs` | End-to-end tests |
+| `tools/lint.mjs` | Offline repository checks (`npm run lint`) |
+| `.github/workflows/` | CI, releases, and the weekly spec check |
 
 ## Guidelines
 
@@ -71,29 +74,37 @@ Skills follow the [Agent Skills specification](https://agentskills.io):
 - Only read-only commands belong in `allowed-tools`.
 - Keep each `SKILL.md` under 500 lines, and move long reference material into a `references/` file.
 
-If you have the Claude Code CLI, check the plugin manifests with `claude plugin validate .`.
+`npm run lint` enforces these rules. If you have the Claude Code CLI, also check the plugin manifests with `claude plugin validate .`.
 
 ### Updating the API spec
 
-When Segment ships API changes:
+A [weekly workflow](.github/workflows/spec-check.yml) opens an issue labelled `spec-update` when Segment publishes a new spec. To pick up the changes:
 
 ```bash
 npm run update-spec
 npm test
+npm run lint
 ```
 
 Commit `spec.json` and `operations.md` together, and note the new spec version in the changelog.
 
 ## Pull requests
 
-1. Fork the repository and create a branch from `main`.
+`main` is protected, so every change, including the maintainer's, lands through a pull request:
+
+1. Fork the repository, or create a branch if you have access.
 2. Make your change, with tests.
 3. Add a line under **Unreleased** in [CHANGELOG.md](CHANGELOG.md).
-4. Run `npm test`.
+4. Run `npm test` and `npm run lint`.
 5. Open the PR and fill in the template.
 
-Small, focused PRs are easiest to review.
+Before merging, the **CI passed** check must succeed (lint, tests on Linux, macOS, and Windows, and the keyring test), and review threads must be resolved. PRs are squash-merged, and their branches are deleted afterwards. Small, focused PRs are easiest to review.
 
 ## Releases
 
-Maintainers release by bumping `version` in `package.json` (and in `.claude-plugin/plugin.json` when skills change), moving the **Unreleased** changelog entries under the new version, and pushing a `vX.Y.Z` tag. The release workflow tests everything again and publishes a GitHub Release with the installable tarball.
+Maintainers release in two steps:
+
+1. In a pull request, bump `version` in `package.json` and `.claude-plugin/plugin.json` (the lint check requires them to match), and move the **Unreleased** changelog entries under the new version. Merge it.
+2. Push a `vX.Y.Z` tag on the merged commit.
+
+The [release workflow](.github/workflows/release.yml) reruns all tests, publishes `@csangani/segment-cli` to GitHub Packages, creates a GitHub Release with the tarball and changelog notes, and install-tests the release on all three operating systems. Release tags are protected, so they can't be moved or deleted.
