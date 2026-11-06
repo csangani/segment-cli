@@ -14,7 +14,7 @@ With them installed, you can ask your agent things like *"which sources have no 
 The skills drive the CLI, so install the CLI and log in first:
 
 ```bash
-npm install -g github:csangani/segment-cli
+npm install -g csangani/segment-cli
 ```
 
 ```bash

@@ -39,7 +39,7 @@ $ segment read listSources --all --fields name,enabled,metadata.name
 1. Install:
 
    ```bash
-   npm install -g github:csangani/segment-cli
+   npm install -g csangani/segment-cli
    ```
 
 2. Log in. Paste a Segment Public API token at the hidden prompt:
@@ -70,19 +70,19 @@ Requires [Node.js](https://nodejs.org) 20 or later. Every release is published i
 ### From GitHub (recommended)
 
 ```bash
-npm install -g github:csangani/segment-cli          # latest
-npm install -g github:csangani/segment-cli#v0.4.0   # a specific release
-npx github:csangani/segment-cli --help              # run once without installing
+npm install -g csangani/segment-cli          # latest
+npm install -g csangani/segment-cli#v0.4.1   # a specific release
+npx csangani/segment-cli --help              # run once without installing
 ```
 
-To update, run the install command again.
+npm reads `csangani/segment-cli`, with no `@`, as this GitHub repository. Don't confuse it with `@csangani/segment-cli`, which is the [GitHub Packages](#from-github-packages) name. To update, run the install command again.
 
 ### From a release tarball
 
 Each [release](https://github.com/csangani/segment-cli/releases) includes the npm package as a file, which npm can install directly:
 
 ```bash
-npm install -g https://github.com/csangani/segment-cli/releases/download/v0.4.0/csangani-segment-cli-0.4.0.tgz
+npm install -g https://github.com/csangani/segment-cli/releases/download/v0.4.1/csangani-segment-cli-0.4.1.tgz
 ```
 
 ### From GitHub Packages
@@ -185,6 +185,8 @@ segment read getSource sourceId=qQEHquLrjRDN9j1ByrChyn
 segment read listAuditEvents startTime=2026-11-01T00:00:00Z resourceType=SOURCE
 segment read getEventsVolumeFromWorkspace granularity=DAY startTime=2026-11-01T00:00:00Z endTime=2026-11-06T00:00:00Z groupBy.0=eventName
 ```
+
+**In PowerShell, quote any value that contains a comma or JSON**, for example `filter.eventName="Signed Up,Order Completed"`. PowerShell otherwise splits it into an array before the CLI sees it. `--fields` is the exception: it accepts commas or spaces, so `--fields id,name` works unquoted.
 
 Request bodies are JSON, inline or from a file (`@file.json`) or stdin (`-`). Files avoid shell-quoting trouble, especially on Windows.
 
@@ -324,6 +326,8 @@ See **[skills/README.md](skills/README.md)** for per-skill details, manual insta
 | `403` / `404` on tracking plans, spaces, audiences, or functions | The workspace lacks Protocols, Engage, or Functions, or the token's role doesn't cover it. |
 | `Warning: no OS credential store was usable` | On Linux, install `secret-tool` (package `libsecret-tools`) and run a keyring such as GNOME Keyring, or accept the owner-only file. |
 | `Profile "…" is read-only` (exit 5) | Intended. Run `segment auth set --read-write` if you want writes. |
+| `--fields` returns `{}` for every item | You're on 0.4.0 in PowerShell; update to 0.4.1. A field name with a typo now prints a warning listing the real fields. |
+| A `key=value` containing commas or JSON is ignored or mangled in PowerShell | Quote the value: `filter.eventName="a,b"`. |
 | Output says `Saved … KB to …` | The response was large and stdout wasn't a terminal. Add `--full` to print it, or read the file. |
 
 ## Security

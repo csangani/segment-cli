@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-06
+
+### Fixed
+
+- **`--fields` returned `{}` for every item in PowerShell.** npm's PowerShell shim (`segment.ps1`) passes an unquoted `--fields a,b,c` as the single argument `"a b c"`. `--fields` now accepts commas, spaces, or both.
+- **A `--fields` entry that matches nothing** now prints a warning on stderr listing the available fields, instead of silently returning empty objects.
+
+### Changed
+
+- The docs, skills, and release checks use npm's shorter GitHub install form, `npm install -g csangani/segment-cli`.
+- The README and the `segment-api` skill explain quoting comma-containing values in PowerShell.
+
 ## [0.4.0] - 2026-11-06
 
 ### Changed
@@ -47,6 +59,7 @@ First public release.
 - **CI:** end-to-end tests on Linux, macOS, and Windows, including a real GNOME Keyring.
 - **Releases:** a GitHub Release with an installable tarball for each `v*` tag.
 
-[Unreleased]: https://github.com/csangani/segment-cli/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/csangani/segment-cli/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/csangani/segment-cli/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/csangani/segment-cli/releases/tag/v0.4.0
 [0.3.0]: https://github.com/csangani/segment-cli/releases/tag/v0.3.0

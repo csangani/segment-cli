@@ -1,6 +1,6 @@
 {
   "name": "@csangani/segment-cli",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Unofficial command-line client for the Twilio Segment Public API, with OS credential-store login and agent skills.",
   "type": "module",
   "bin": {

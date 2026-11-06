@@ -317,14 +317,40 @@ export function listKey(data) {
 const getPath = (obj, p) => p.split(".").reduce((o, k) => (o == null ? undefined : o[k]), obj);
 const pick = (obj, fields) => Object.fromEntries(fields.map((f) => [f, getPath(obj, f)]));
 
+// Parse a --fields value. Accepts commas and/or whitespace, because PowerShell's npm shim turns an
+// unquoted `a,b,c` into the single argument "a b c".
+export const parseFields = (value) =>
+  value === undefined || value === true
+    ? null
+    : String(value)
+        .split(/[\s,]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+// The records --fields applies to: the items of the single list in `data`, or its single object.
+function projectionTargets(data) {
+  const key = listKey(data);
+  if (key) return { key, items: data[key] };
+  const objKeys = Object.keys(data).filter((k) => data[k] && typeof data[k] === "object" && k !== "pagination");
+  return objKeys.length === 1 ? { key: objKeys[0], items: [data[objKeys[0]]], single: true } : { key: null, items: [] };
+}
+
+// Fields that are missing from every record, plus the attributes a record actually has.
+export function unmatchedFields(payload, fields) {
+  if (!fields || !fields.length || !payload || !payload.data) return { unmatched: [], available: [] };
+  const { items } = projectionTargets(payload.data);
+  if (!items.length) return { unmatched: [], available: [] };
+  return {
+    unmatched: fields.filter((f) => items.every((item) => getPath(item, f) === undefined)),
+    available: Object.keys(items[0] || {}),
+  };
+}
+
 export function project(payload, fields) {
   if (!fields || !fields.length || !payload || !payload.data) return payload;
   const data = { ...payload.data };
-  const key = listKey(data);
-  if (key) data[key] = data[key].map((item) => pick(item, fields));
-  else {
-    const objKeys = Object.keys(data).filter((k) => data[k] && typeof data[k] === "object" && k !== "pagination");
-    if (objKeys.length === 1) data[objKeys[0]] = pick(data[objKeys[0]], fields);
-  }
+  const { key, single } = projectionTargets(data);
+  if (key && single) data[key] = pick(data[key], fields);
+  else if (key) data[key] = data[key].map((item) => pick(item, fields));
   return { ...payload, data };
 }
