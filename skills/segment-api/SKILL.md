@@ -2,7 +2,7 @@
 name: segment-api
 description: Read or change a Twilio Segment workspace through the Segment Public API using the `segment` CLI (github.com/csangani/segment-cli). Use when the user mentions Segment, their Segment workspace, sources, destinations, warehouses, write keys, tracking plans or Protocols, Engage audiences or computed traits, functions, reverse ETL, MTUs or usage, the audit trail, deletion or suppression regulations, or docs.segmentapis.com, and when writing code against the Segment Public API.
 license: MIT
-compatibility: Requires the segment CLI (npm install -g github:csangani/segment-cli; Node.js 20+ and git), a shell tool, and network access to api.segmentapis.com or eu1.api.segmentapis.com.
+compatibility: Requires the segment CLI (npm install -g csangani/segment-cli; Node.js 20+ and git), a shell tool, and network access to api.segmentapis.com or eu1.api.segmentapis.com.
 allowed-tools: Bash(segment search *) Bash(segment describe *) Bash(segment read *) Bash(segment auth status) Bash(segment auth status *) Bash(segment --help) Bash(segment --version)
 ---
 
@@ -27,7 +27,7 @@ Every command takes `--profile NAME` to target a workspace other than the active
 3. Read. For a complete answer, use `--all` with `--fields` so the output stays small. `read` prints JSON to stdout and notes to stderr. When output isn't a terminal and is over about 40 KB, it's saved to a temp file and the summary names the file. Search or read that file, or process it with a short `node -e` script, instead of re-fetching. Pass `--full` when you need to pipe the JSON yourself.
 4. Change things with `segment write`, only after following the write rules below.
 
-Parameters are `key=value`. Nested query values use dotted keys (`pagination.count=50`, `groupBy.0=eventName`) or a JSON value (`filter='{"eventName":"x"}'`). For bodies, write the JSON to a temp file and pass `--body @path/to/body.json`. This avoids shell-quoting problems, especially on Windows.
+Parameters are `key=value`. Nested query values use dotted keys (`pagination.count=50`, `groupBy.0=eventName`) or a JSON value (`filter='{"eventName":"x"}'`). For bodies, write the JSON to a temp file and pass `--body @path/to/body.json`. This avoids shell-quoting problems, especially on Windows. In PowerShell, quote any argument that contains a comma (`filter.eventName="a,b"`), because PowerShell turns unquoted comma lists into arrays. `--fields` accepts commas or spaces, so it's safe either way. If `read` warns that a `--fields` entry matched nothing, fix the name using the list of available fields the warning prints.
 
 ## Write rules
 

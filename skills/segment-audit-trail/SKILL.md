@@ -2,7 +2,7 @@
 name: segment-audit-trail
 description: Summarize recent changes in a Segment workspace from the audit trail (who changed which source, destination, tracking plan, or user, and when), optionally filtered to one resource or time window. Use when the user asks what changed in Segment, who disabled or deleted something, or for recent activity.
 license: MIT
-compatibility: Requires the segment CLI (npm install -g github:csangani/segment-cli), logged in. See the segment-setup skill.
+compatibility: Requires the segment CLI (npm install -g csangani/segment-cli), logged in. See the segment-setup skill.
 allowed-tools: Bash(segment read *) Bash(segment describe *) Bash(segment auth status) Bash(segment auth status *)
 ---
 

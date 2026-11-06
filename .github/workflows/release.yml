@@ -62,7 +62,7 @@ jobs:
           ## Install
 
           \`\`\`bash
-          npm install -g github:csangani/segment-cli#$GITHUB_REF_NAME
+          npm install -g csangani/segment-cli#$GITHUB_REF_NAME
           \`\`\`
 
           Or from GitHub Packages (requires a token with \`read:packages\`; see the README): \`npm install -g @csangani/segment-cli@$VERSION\`
@@ -102,7 +102,7 @@ jobs:
         run: |
           case "${{ matrix.source }}" in
             github-packages) npm install -g "@csangani/segment-cli@$VERSION" ;;
-            git-tag)         npm install -g "github:csangani/segment-cli#$GITHUB_REF_NAME" ;;
+            git-tag)         npm install -g "csangani/segment-cli#$GITHUB_REF_NAME" ;;
             release-tarball) npm install -g "https://github.com/csangani/segment-cli/releases/download/$GITHUB_REF_NAME/$TARBALL" ;;
           esac
       - name: Run the installed CLI
