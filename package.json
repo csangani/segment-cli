@@ -1,7 +1,8 @@
 {
   "name": "segment-cli",
   "version": "0.3.0",
-  "description": "Unofficial command-line client for the Twilio Segment Public API, with OS credential-store login and agent skills.",
+  "private": true,
+  "description": "Unofficial command-line client for the Twilio Segment Public API, with OS credential-store login and agent skills. Install with: npm install -g github:csangani/segment-cli",
   "type": "module",
   "bin": {
     "segment": "src/cli.mjs"

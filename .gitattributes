@@ -1,0 +1,6 @@
+# Normalize line endings so the CLI's shebang works on macOS and Linux even when committed from Windows.
+* text=auto eol=lf
+
+# Generated files: collapse them in diffs and leave them out of GitHub's language stats.
+spec.json linguist-generated=true
+skills/segment-api/references/operations.md linguist-generated=true

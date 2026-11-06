@@ -2,7 +2,7 @@
 name: segment-usage
 description: Report Segment Monthly Tracked Users (MTU) and API call usage for a month, for the whole workspace and per source, with the top contributors. Use when the user asks about Segment MTUs, usage, billing drivers, or which sources send the most.
 license: MIT
-compatibility: Requires the segment CLI (npm install -g segment-cli), logged in. See the segment-setup skill.
+compatibility: Requires the segment CLI (npm install -g github:csangani/segment-cli), logged in. See the segment-setup skill.
 allowed-tools: Bash(segment read *) Bash(segment describe *) Bash(segment auth status) Bash(segment auth status *)
 ---
 

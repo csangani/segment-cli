@@ -1,6 +1,10 @@
-# Publishes the CLI to npm when a tag like v0.3.1 is pushed.
-# Uses npm trusted publishing (OIDC): after the first manual publish, add this repository and this
-# workflow file as a trusted publisher on npmjs.com. No npm token is stored in GitHub.
+# Publishes a GitHub Release when a tag like v0.3.1 is pushed: runs the full test matrix,
+# checks the tag matches package.json, builds the npm tarball, and attaches it to the release
+# with notes taken from CHANGELOG.md.
+#
+# Users install a release with either:
+#   npm install -g github:csangani/segment-cli#v0.3.1
+#   npm install -g https://github.com/csangani/segment-cli/releases/download/v0.3.1/segment-cli-0.3.1.tgz
 
 name: Release
 
@@ -15,27 +19,44 @@ jobs:
   test:
     uses: ./.github/workflows/ci.yml
 
-  publish:
+  release:
     needs: test
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
+      contents: write
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
-      - name: Use an npm release that supports trusted publishing
-        run: npm install -g npm@latest
-      - name: Check the tag matches the package version
+      - name: Check the tag matches package.json
+        id: version
         run: |
-          tag="${GITHUB_REF_NAME#v}"
-          pkg="$(node -p "require('./package.json').version")"
-          if [ "$tag" != "$pkg" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $pkg"
+          version="$(node -p "require('./package.json').version")"
+          if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version"
             exit 1
           fi
-      - name: Publish to npm
-        run: npm publish --access public
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Build the tarball
+        run: npm pack
+      - name: Extract release notes from CHANGELOG.md
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          awk -v v="$VERSION" 'index($0, "## [" v "]") == 1 {found=1; next} /^## \[/ {found=0} /^\[[^]]+\]: / {found=0} found' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then echo "See CHANGELOG.md." > notes.md; fi
+          {
+            echo
+            echo "## Install"
+            echo
+            echo '```bash'
+            echo "npm install -g github:csangani/segment-cli#$GITHUB_REF_NAME"
+            echo '```'
+          } >> notes.md
+          cat notes.md
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: gh release create "$GITHUB_REF_NAME" "segment-cli-$VERSION.tgz" --title "segment-cli $GITHUB_REF_NAME" --notes-file notes.md --verify-tag

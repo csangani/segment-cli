@@ -1,9 +1,9 @@
 ---
 name: segment-setup
-description: Install the segment CLI (npm segment-cli) if it's missing, guide the user through logging in to their Segment workspace, and verify the token, region, and permissions. Use when `segment` isn't found, is older than 0.3.0, or reports "Not logged in" or a rejected token (exit code 3), or when the user asks to set up or connect Segment.
+description: Install the segment CLI (github.com/csangani/segment-cli) if it's missing, guide the user through logging in to their Segment workspace, and verify the token, region, and permissions. Use when `segment` isn't found, is older than 0.3.0, or reports "Not logged in" or a rejected token (exit code 3), or when the user asks to set up or connect Segment.
 license: MIT
-compatibility: Requires Node.js 20+ with npm, a shell tool, and network access to the npm registry and api.segmentapis.com.
-allowed-tools: Bash(segment auth status) Bash(segment auth status *) Bash(segment read getWorkspace*) Bash(segment --version) Bash(node --version) Bash(npm --version)
+compatibility: Requires Node.js 20+ with npm, git, a shell tool, and network access to github.com and api.segmentapis.com.
+allowed-tools: Bash(segment auth status) Bash(segment auth status *) Bash(segment read getWorkspace*) Bash(segment --version) Bash(node --version) Bash(npm --version) Bash(git --version)
 ---
 
 # Segment setup
@@ -17,7 +17,7 @@ The token is the user's to handle, not yours. Never ask for it in chat, and neve
 Run `segment --version`.
 
 - **Prints 0.3.0 or later:** continue to step 2.
-- **Not found, or older:** check `node --version` (needs 20 or later) and `npm --version`. Then offer to install with `npm install -g segment-cli@latest`, and run it only after the user agrees, since it changes their global npm packages. If Node is missing, point them to https://nodejs.org or their OS package manager, then stop.
+- **Not found, or older:** check `node --version` (needs 20 or later), `npm --version`, and `git --version` (npm needs git to install from GitHub). Then offer to install with `npm install -g github:csangani/segment-cli`, and run it only after the user agrees, since it changes their global npm packages. To pin a release, append a tag, for example `github:csangani/segment-cli#v0.3.0`. Running the same command again updates an existing install. If Node or git is missing, point them to https://nodejs.org or https://git-scm.com, or their OS package manager, then stop.
 
 After installing, run `segment --version` again. If the shell still can't find it, npm's global bin directory isn't on PATH. Run `npm prefix -g`: on macOS and Linux the commands live in that directory's `bin/` subfolder; on Windows, in the directory itself. Tell the user how to add it to PATH for their shell.
 

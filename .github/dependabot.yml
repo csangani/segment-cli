@@ -1,0 +1,10 @@
+# The CLI has no npm dependencies; this keeps the GitHub Actions used by CI and releases up to date.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

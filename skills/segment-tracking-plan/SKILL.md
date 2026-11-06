@@ -2,7 +2,7 @@
 name: segment-tracking-plan
 description: Compare the analytics calls in a codebase (track, identify, group, page, screen) with a Segment Protocols tracking plan. Finds events missing from the plan, plan events the code never sends, and property mismatches, and can export the plan to a file. Use when the user asks whether their instrumentation matches the tracking plan, about Protocols violations, or to export a tracking plan.
 license: MIT
-compatibility: Requires the segment CLI (npm install -g segment-cli), logged in to a workspace with Protocols. See the segment-setup skill.
+compatibility: Requires the segment CLI (npm install -g github:csangani/segment-cli), logged in to a workspace with Protocols. See the segment-setup skill.
 allowed-tools: Bash(segment read *) Bash(segment describe *) Bash(segment search *) Bash(segment auth status) Bash(segment auth status *) Grep Glob Read
 ---
 

@@ -2,7 +2,7 @@
   "name": "segment",
   "displayName": "Segment Public API",
   "version": "0.3.0",
-  "description": "Skills for working with a Twilio Segment workspace through the segment CLI (npm: segment-cli): inventory, usage, audit trail, tracking-plan checks, and safe reads and writes across the whole Public API.",
+  "description": "Skills for working with a Twilio Segment workspace through the segment CLI (github.com/csangani/segment-cli): inventory, usage, audit trail, tracking-plan checks, and safe reads and writes across the whole Public API.",
   "author": {
     "name": "Chirag Sangani"
   },

@@ -2,7 +2,7 @@
 name: segment-inventory
 description: Map a Segment workspace's sources, the destinations and warehouses each feeds, tracking plans, and Engage spaces, and flag configuration problems such as disabled sources, orphaned destinations, and sources sending nowhere. Use when the user asks what's in their Segment workspace, for an overview or audit of its setup, or where a source's data goes.
 license: MIT
-compatibility: Requires the segment CLI (npm install -g segment-cli), logged in. See the segment-setup skill.
+compatibility: Requires the segment CLI (npm install -g github:csangani/segment-cli), logged in. See the segment-setup skill.
 allowed-tools: Bash(segment read *) Bash(segment describe *) Bash(segment search *) Bash(segment auth status) Bash(segment auth status *)
 ---
 

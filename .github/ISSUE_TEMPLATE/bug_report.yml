@@ -1,0 +1,58 @@
+name: Bug report
+description: Something in the CLI or the agent skills doesn't work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! **Never paste a Segment token or write key here.** Redact workspace IDs and data you'd rather keep private.
+        Security problems go to [private vulnerability reporting](https://github.com/csangani/segment-cli/security/advisories/new), not here.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you run, what did you expect, and what happened instead?
+      placeholder: |
+        Ran: segment read listSources --all --fields id,name
+        Expected: …
+        Got: …
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: The full stdout/stderr, and the exit code (`echo $?` / `$LASTEXITCODE`). Redact anything sensitive.
+      render: text
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - CLI command (search / describe / read / write)
+        - Login, profiles, or credential storage
+        - Agent skill
+        - Claude Code plugin
+        - Installation
+        - Docs
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: segment --version
+      placeholder: segment 0.3.0 (Segment Public API spec v74.0.1)
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS, shell, and Node.js version
+      placeholder: Windows 11, PowerShell 7.5, Node 24.1 / macOS 15, zsh, Node 22.12
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Agent (if this is about a skill)
+      placeholder: Claude Code 2.1, Codex, Cursor, …

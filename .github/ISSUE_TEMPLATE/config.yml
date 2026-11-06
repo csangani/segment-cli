@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/csangani/segment-cli/security/advisories/new
+    about: Please report security issues privately, not as public issues.
+  - name: Segment Public API reference
+    url: https://docs.segmentapis.com/
+    about: Questions about what an API operation does belong to Segment's documentation.
