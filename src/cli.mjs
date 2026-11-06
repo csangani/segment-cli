@@ -4,7 +4,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { SPEC, CLI_VERSION, UserError, findOp, searchOps, opLine, describeOp, listTags, buildRequest, urlFor, mediaType, send, errorText, listKey, project } from "./api.mjs";
+import { SPEC, CLI_VERSION, UserError, findOp, searchOps, opLine, describeOp, listTags, buildRequest, urlFor, mediaType, send, errorText, listKey, project, parseFields, unmatchedFields } from "./api.mjs";
 import { configDir, loadConfig, saveConfig, storeToken, loadToken, removeToken, readStdin, promptHidden, BACKENDS } from "./auth.mjs";
 
 const MAX_INLINE = 40000;
@@ -279,7 +279,7 @@ async function cmdRead(positionals, flags) {
   const op = findOp(opId);
   if (op.method !== "GET") throw new UserError(`${op.id} is a ${op.method} operation. Use \`segment write ${op.id}\`.`);
   const req = buildRequest(op, parseParams(rest), flags["api-version"]);
-  const fields = flags.fields ? String(flags.fields).split(",").map((s) => s.trim()).filter(Boolean) : null;
+  const fields = parseFields(flags.fields);
   const c = connection(flags);
 
   let r = await send(c, req);
@@ -305,6 +305,13 @@ async function cmdRead(positionals, flags) {
     note = next ? `Stopped after ${pages} pages (--max-pages). More results exist.` : `Fetched all ${items.length} items in ${pages} page(s).`;
   } else if (key && payload.data.pagination && payload.data.pagination.next) {
     note = `First page only (${payload.data[key].length} items${payload.data.pagination.totalEntries ? ` of ${payload.data.pagination.totalEntries}` : ""}). Add --all for everything.`;
+  }
+  const { unmatched, available } = unmatchedFields(payload, fields);
+  if (unmatched.length) {
+    info(
+      `Warning: --fields ${unmatched.map((f) => `"${f}"`).join(", ")} matched nothing in the response. ` +
+        `Fields are case-sensitive; nested ones use dots (metadata.name). Available: ${available.join(", ") || "(none)"}.`
+    );
   }
   emit(op, project(payload, fields), flags, note);
 }

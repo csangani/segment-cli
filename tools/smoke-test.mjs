@@ -141,6 +141,18 @@ let parsed = r.code === 0 ? JSON.parse(r.stdout) : null;
 check("429 is retried, then all pages are merged", parsed && parsed.data.sources.length === 5 && parsed.data.pagination.pagesFetched === 3, r.all);
 check("--fields keeps only the requested attributes", parsed && JSON.stringify(parsed.data.sources[0]) === JSON.stringify({ id: "src0", enabled: true, "metadata.name": "Kind 0" }), r.stdout.slice(0, 300));
 check("notes go to stderr, JSON to stdout", /Fetched all 5 items/.test(r.stderr) && !/Fetched all/.test(r.stdout), r.all);
+
+// PowerShell's npm shim turns an unquoted `--fields a,b,c` into the single argument "a b c".
+r = await cli(["read", "listSources", "--fields", "id enabled metadata.name", "--profile", "test"]);
+parsed = r.code === 0 ? JSON.parse(r.stdout) : null;
+check("--fields also accepts a space-separated list (PowerShell)", parsed && JSON.stringify(parsed.data.sources[0]) === JSON.stringify({ id: "src0", enabled: true, "metadata.name": "Kind 0" }), r.all.slice(0, 400));
+r = await cli(["read", "listSources", "--fields", "id,nosuchfield", "--profile", "test"]);
+parsed = r.code === 0 ? JSON.parse(r.stdout) : null;
+check(
+  "--fields warns about fields that match nothing and lists the available ones",
+  parsed && parsed.data.sources[0].id === "src0" && /"nosuchfield" matched nothing/.test(r.stderr) && /Available: id, slug, enabled, metadata/.test(r.stderr) && !/"id" matched nothing/.test(r.stderr),
+  r.stderr
+);
 check("dotted pagination keys in the query", seen.some((s) => /pagination\.count=2&pagination\.cursor=2/.test(s.url)));
 
 r = await cli(["read", "listSources", "--profile", "test"]);
