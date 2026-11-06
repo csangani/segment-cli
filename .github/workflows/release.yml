@@ -1,0 +1,41 @@
+# Publishes the CLI to npm when a tag like v0.3.1 is pushed.
+# Uses npm trusted publishing (OIDC): after the first manual publish, add this repository and this
+# workflow file as a trusted publisher on npmjs.com. No npm token is stored in GitHub.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: Use an npm release that supports trusted publishing
+        run: npm install -g npm@latest
+      - name: Check the tag matches the package version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $pkg"
+            exit 1
+          fi
+      - name: Publish to npm
+        run: npm publish --access public

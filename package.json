@@ -1,0 +1,41 @@
+{
+  "name": "segment-cli",
+  "version": "0.3.0",
+  "description": "Unofficial command-line client for the Twilio Segment Public API, with OS credential-store login and agent skills.",
+  "type": "module",
+  "bin": {
+    "segment": "src/cli.mjs"
+  },
+  "files": [
+    "src/",
+    "spec.json"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node tools/smoke-test.mjs",
+    "update-spec": "node tools/update-spec.mjs"
+  },
+  "keywords": [
+    "segment",
+    "twilio-segment",
+    "segment-public-api",
+    "cdp",
+    "analytics",
+    "tracking-plan",
+    "protocols",
+    "cli",
+    "agent-skills"
+  ],
+  "author": "Chirag Sangani",
+  "license": "MIT",
+  "homepage": "https://github.com/csangani/segment-cli#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/csangani/segment-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/csangani/segment-cli/issues"
+  }
+}

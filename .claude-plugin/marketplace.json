@@ -1,0 +1,16 @@
+{
+  "name": "segment-cli",
+  "owner": {
+    "name": "Chirag Sangani"
+  },
+  "description": "Claude Code plugin for the segment CLI.",
+  "plugins": [
+    {
+      "name": "segment",
+      "source": "./",
+      "description": "Skills for working with a Twilio Segment workspace through the segment CLI: inventory, usage, audit trail, tracking-plan checks, and safe reads and writes across the whole Public API.",
+      "category": "data",
+      "tags": ["segment", "analytics", "cdp"]
+    }
+  ]
+}
